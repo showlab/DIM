@@ -12,8 +12,7 @@
 
 **[2025-10-08]** We release the **DIM-Edit** dataset and the **DIM-4.6B-T2I** / **DIM-4.6B-Edit** models.
 
-**[2025-09-26]** A new version of the **DIM** paper is released, including more results across various open-source
-designers.
+**[2025-09-26]** We upload a new version of the paper, including more results across various designers.
 
 **[2025-09-02]** The **DIM** paper is released.
 
