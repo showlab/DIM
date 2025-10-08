@@ -1,0 +1,4 @@
+{"id": "0", "image_path": "./cache/demo/edit_demo_0000.png", "prompt": "Remove the lemons on the table.", "image_path_target": "./cache/demo/edit_demo_0000.png"}
+{"id": "1", "image_path": "./cache/demo/edit_demo_0001.png", "prompt": "Add some birds on the beach.", "image_path_target": "./cache/demo/edit_demo_0001.png"}
+{"id": "2", "image_path": "./cache/demo/edit_demo_0002.png", "prompt": "Change the background to forest.", "image_path_target": "./cache/demo/edit_demo_0002.png"}
+{"id": "3", "image_path": "./cache/demo/edit_demo_0003.png", "prompt": "Put a black sunglasses on the dog.", "image_path_target": "./cache/demo/edit_demo_0003.png"}
