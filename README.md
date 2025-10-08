@@ -430,3 +430,19 @@ to [Qwen RESEARCH LICENSE AGREEMENT](https://huggingface.co/Qwen/Qwen2.5-VL-3B-I
 to [NVIDIA License](https://huggingface.co/Efficient-Large-Model/SANA1.5_1.6B_1024px/blob/main/LICENSE.txt)). We retain
 ownership of all intellectual property rights in and to any
 derivative works and modifications that we made.
+
+## Citation
+
+If you find our work useful or helpful for your R&D works, please feel free to cite our paper as below.
+
+```
+@misc{zeng2025drawinmindrebalancingdesignerpainterroles,
+      title={Draw-In-Mind: Rebalancing Designer-Painter Roles in Unified Multimodal Models Benefits Image Editing}, 
+      author={Ziyun Zeng and Junhao Zhang and Wei Li and Mike Zheng Shou},
+      year={2025},
+      eprint={2509.01986},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2509.01986}, 
+}
+```
