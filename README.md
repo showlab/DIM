@@ -134,7 +134,7 @@ pip install -U huggingface_hub
 # 2. Log in with your Hugging Face account token
 huggingface-cli login
 
-# 3. Download the dataset (it may take several hours depending on network speed)
+# 3. Download the dataset
 huggingface-cli download stdKonjac/DIM-Edit --repo-type dataset --local-dir ./DIM-Edit
 ```
 
@@ -155,7 +155,7 @@ image editing samples. Each line in this file corresponds to a single sample con
 | **id**                | Unique identifier for each sample.                                                        |
 | **image_path**        | Path to the **source** image, beginning with `image/`.                                    |
 | **image_path_target** | Path to the **target** image, beginning with `image/`.                                    |
-| **prompt**            | The CoT-style editing instruction describing how to transform the source into the target. |
+| **prompt**            | The CoT-style instruction describing how to transform the source into the target. |
 
 ## Model Usage
 
