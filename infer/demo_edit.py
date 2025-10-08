@@ -43,12 +43,21 @@ if __name__ == "__main__":
     processor = AutoProcessor.from_pretrained(model_args.pretrained_model_name_or_path, padding_side='right')
 
     # <----------gen CoT data begin---------->
-    # Support GPT-4o
-    model.set_designer_gpt(api_key='')
+    # GPT-4o as external designer
+    # model.set_designer_gpt(api_key='')
 
-    # Support Qwen2.5-VL-XB-Instruct
+    # Qwen2.5-VL as external designer
     # model.set_designer_qwen(version='Qwen/Qwen2.5-VL-3B-Instruct')
     # model.set_designer_qwen(version='Qwen/Qwen2.5-VL-7B-Instruct')
+
+    # InternVL3.5 as external designer
+    model.set_designer_internvl(version='OpenGVLab/InternVL3_5-8B-HF')
+
+    # MiMo-VL as external designer
+    # model.set_designer_mimo(version='XiaomiMimo/MiMo-VL-7B-RL-2508')
+
+    # GLM-4.1V as external designer
+    # model.set_designer_glm(version='THUDM/GLM-4.1V-9B-Thinking')
 
     with open(data_args.dataset_path, 'r') as f:
         records = [json.loads(line) for line in f]

@@ -497,9 +497,6 @@ class DIMDecoder(nn.Module):
                     guidance_type=guidance_type,
                     # cfg_scale=guidance_scale,
                     cfg_scale=7.5,
-                    # cfg_scale=6.0,
-                    # cfg_scale=4.5,
-                    # cfg_scale=3.0,
                     pag_scale=pag_guidance_scale,
                     pag_applied_layers=self.config.model.pag_applied_layers,
                     model_type="flow",
@@ -778,10 +775,20 @@ class DIM(nn.Module):
         elif self.designer_name in [
             'Qwen/Qwen2.5-VL-3B-Instruct',
             'Qwen/Qwen2.5-VL-7B-Instruct',
-            'Qwen/Qwen2.5-VL-32B-Instruct',
-            'Qwen/Qwen2.5-VL-72B-Instruct'
         ]:
             return self.get_cot_from_designer_qwen(image_path, instruction)
+        elif self.designer_name in [
+            'OpenGVLab/InternVL3_5-8B-HF'
+        ]:
+            return self.get_cot_from_designer_internvl(image_path, instruction)
+        elif self.designer_name in [
+            'XiaomiMimo/MiMo-VL-7B-RL-2508'
+        ]:
+            return self.get_cot_from_designer_mimo(image_path, instruction)
+        elif self.designer_name in [
+            'THUDM/GLM-4.1V-9B-Thinking'
+        ]:
+            return self.get_cot_from_designer_glm(image_path, instruction)
         else:
             raise NotImplementedError(f'designer_name {self.designer_name} not supported')
 
@@ -833,7 +840,6 @@ class DIM(nn.Module):
         raise RuntimeError("Failed to get completion after max retries")
 
     def set_designer_qwen(self, version='Qwen/Qwen2.5-VL-7B-Instruct'):
-        # default: Load the model on the available device(s)
         self.designer = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             version,
             torch_dtype=torch.bfloat16,
@@ -893,3 +899,194 @@ class DIM(nn.Module):
         )
 
         return output_text[0].strip()
+
+    def set_designer_internvl(self, version='OpenGVLab/InternVL3_5-8B-HF'):
+        from transformers import AutoProcessor, AutoModelForImageTextToText
+
+        self.designer = AutoModelForImageTextToText.from_pretrained(
+            version,
+            torch_dtype=torch.bfloat16,
+            low_cpu_mem_usage=True,
+            # use_flash_attn=True,
+            attn_implementation="flash_attention_2",
+            trust_remote_code=True,
+            device_map="auto"
+        ).eval()
+        self.designer_name = version
+        self.designer_processor = AutoProcessor.from_pretrained(version)
+
+        print(f'Designer {self.designer_name} loaded')
+
+    def get_cot_from_designer_internvl(self, image_path, instruction):
+        prompt = (
+            "You will receive two items: a source image, and an edit instruction. "
+            "Your task is to outline your reasoning in four steps:\n"
+            "1. Edit Instruction: [The edit instruction]\n"
+            "2. Global Layout Perception: Identify and describe all key objects and their positions in the source image.\n"
+            "3. Local Object Perception: Detail the appearance (shape, color, texture, state) of each object or background element in the source.\n"
+            "4. Edit Area Localization: Specify which objects or regions will change, based on your refined instruction.\n"
+            "5. Edited Image Imagination: Describe how the edited image will look, emphasizing the modified areas.\n\n"
+            "Respond using exactly the format above, with no extra commentary.\n\n"
+            f"Edit instruction: {instruction}"
+        )
+
+        R1_SYSTEM_PROMPT = """
+        You are an AI assistant that rigorously follows this response protocol:
+
+        1. First, conduct a detailed analysis of the question. Consider different angles, potential solutions, and reason through the problem step-by-step. Enclose this entire thinking process within <think> and </think> tags.
+
+        2. After the thinking section, provide a clear, concise, and direct answer to the user's question. Separate the answer from the think section with a newline.
+
+        Ensure that the thinking process is thorough but remains focused on the query. The final answer should be standalone and not reference the thinking section.
+        """.strip()
+
+        messages = [
+            {
+                "role": "system",
+                "content": [
+                    {"type": "text", "text": R1_SYSTEM_PROMPT},
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "url": image_path},
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ]
+
+        # Preparation for inference
+        inputs = self.designer_processor.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            tokenize=True,
+            return_dict=True,
+            return_tensors="pt"
+        ).to(self.designer.device, dtype=torch.bfloat16)
+
+        generate_ids = self.designer.generate(**inputs, max_new_tokens=8192)
+
+        decoded_output = self.designer_processor.decode(generate_ids[0, inputs["input_ids"].shape[1]:],
+                                                        skip_special_tokens=True)
+
+        decoded_output = re.sub(r"<think>.*?</think>", "", decoded_output, flags=re.DOTALL)
+
+        return decoded_output.strip()
+
+    def set_designer_mimo(self, version='XiaomiMimo/MiMo-VL-7B-RL-2508'):
+        self.designer = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+            version,
+            torch_dtype=torch.bfloat16,
+            attn_implementation="flash_attention_2",
+            device_map="auto",
+        )
+        self.designer_name = version
+        self.designer_processor = AutoProcessor.from_pretrained(version)
+
+        print(f'Designer {self.designer_name} loaded')
+
+    def get_cot_from_designer_mimo(self, image_path, instruction):
+        prompt = (
+            "You will receive two items: a source image, and an edit instruction. "
+            "Your task is to outline your reasoning in four steps:\n"
+            "1. Edit Instruction: [The edit instruction]\n"
+            "2. Global Layout Perception: Identify and describe all key objects and their positions in the source image.\n"
+            "3. Local Object Perception: Detail the appearance (shape, color, texture, state) of each object or background element in the source.\n"
+            "4. Edit Area Localization: Specify which objects or regions will change, based on your refined instruction.\n"
+            "5. Edited Image Imagination: Describe how the edited image will look, emphasizing the modified areas.\n\n"
+            "Respond using exactly the format above, with no extra commentary.\n\n"
+            f"Edit instruction: {instruction}"
+        )
+
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "image": image_path},
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ]
+
+        # Preparation for inference
+        text = self.designer_processor.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+        image_inputs, video_inputs = process_vision_info(messages)
+        inputs = self.designer_processor(
+            text=[text],
+            images=image_inputs,
+            videos=video_inputs,
+            padding=True,
+            return_tensors="pt",
+        )
+        inputs = inputs.to("cuda")
+
+        # Inference: Generation of the output
+        generated_ids = self.designer.generate(**inputs, max_new_tokens=8192)
+        generated_ids_trimmed = [
+            out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+        ]
+        output_text = self.designer_processor.batch_decode(
+            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )
+
+        output_text[0] = re.sub(r"<think>.*?</think>", "", output_text[0], flags=re.DOTALL)
+
+        return output_text[0].strip()
+
+    def set_designer_glm(self, version='THUDM/GLM-4.1V-9B-Thinking'):
+        from transformers import AutoProcessor, Glm4vForConditionalGeneration
+
+        self.designer = Glm4vForConditionalGeneration.from_pretrained(
+            pretrained_model_name_or_path=version,
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+            attn_implementation="flash_attention_2",
+        )
+        self.designer_name = version
+        self.designer_processor = AutoProcessor.from_pretrained(version)
+
+        print(f'Designer {self.designer_name} loaded')
+
+    def get_cot_from_designer_glm(self, image_path, instruction):
+        prompt = (
+            "You will receive two items: a source image, and an edit instruction. "
+            "Your task is to outline your reasoning in four steps:\n"
+            "1. Edit Instruction: [The edit instruction]\n"
+            "2. Global Layout Perception: Identify and describe all key objects and their positions in the source image.\n"
+            "3. Local Object Perception: Detail the appearance (shape, color, texture, state) of each object or background element in the source.\n"
+            "4. Edit Area Localization: Specify which objects or regions will change, based on your refined instruction.\n"
+            "5. Edited Image Imagination: Describe how the edited image will look, emphasizing the modified areas.\n\n"
+            "Respond using exactly the format above, with no extra commentary.\n\n"
+            "Remember to add a number for each section.\n\n"
+            f"Edit instruction: {instruction}"
+        )
+
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "url": image_path},
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ]
+
+        inputs = self.designer_processor.apply_chat_template(
+            messages,
+            tokenize=True,
+            add_generation_prompt=True,
+            return_dict=True,
+            return_tensors="pt"
+        ).to(self.designer.device)
+
+        generated_ids = self.designer.generate(**inputs, max_new_tokens=8192)
+        output_text = self.designer_processor.decode(generated_ids[0][inputs["input_ids"].shape[1]:],
+                                                     skip_special_tokens=False)
+
+        answer = re.search(r"<answer>(.*?)</answer>", output_text, flags=re.DOTALL)
+        answer = answer.group(1).strip()
+
+        return answer

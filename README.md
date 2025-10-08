@@ -8,6 +8,15 @@
 
 ![DIM-Edit](assets/dim_edit.png)
 
+## 📰 News
+
+**[2025-10-08]** We release the **DIM-Edit** dataset and the **DIM-4.6B-T2I** / **DIM-4.6B-Edit** models.
+
+**[2025-09-26]** A new version of the **DIM** paper is released, including more results across various open-source
+designers.
+
+**[2025-09-02]** The **DIM** paper is released.
+
 ## Introduction
 
 Unified models achieve strong results in text-to-image generation but remain weak in precise editing. This limitation
@@ -108,14 +117,6 @@ models trained on different data corpora.
 
 </details>
 
-## Open-Source Plan
-
-- [x] DIM Paper
-- [x] DIM-4.6B-T2I
-- [x] DIM-4.6B-Edit
-- [x] DIM-Edit Data
-- [ ] DIM-T2I Data
-
 ## Dataset Usage
 
 ### DIM-T2I
@@ -150,12 +151,34 @@ tar -xvzf images.tar.gz
 In the meantime, you will find a JSONL file named `tos_dataset_edit.jsonl` in the root directory, which records all
 image editing samples. Each line in this file corresponds to a single sample containing four fields:
 
-| Field                 | Description                                                                               |
-|:----------------------|:------------------------------------------------------------------------------------------|
-| **id**                | Unique identifier for each sample.                                                        |
-| **image_path**        | Path to the **source** image, beginning with `image/`.                                    |
-| **image_path_target** | Path to the **target** image, beginning with `image/`.                                    |
+| Field                 | Description                                                                       |
+|:----------------------|:----------------------------------------------------------------------------------|
+| **id**                | Unique identifier for each sample.                                                |
+| **image_path**        | Path to the **source** image, beginning with `image/`.                            |
+| **image_path_target** | Path to the **target** image, beginning with `image/`.                            |
 | **prompt**            | The CoT-style instruction describing how to transform the source into the target. |
+
+We recommend using the huggingface `datasets` library to load the dataset efficiently:
+
+```python
+from datasets import load_dataset, Features, Value
+
+features = Features({
+    "id": Value("string"),
+    "image_path": Value("string"),
+    "image_path_target": Value("string"),
+    "prompt": Value("string"),
+})
+
+ds = load_dataset(
+    "json",
+    data_files="DIM-Edit/tos_dataset_edit.jsonl",
+    features=features,
+    split="train",
+)
+
+print(ds[0])
+```
 
 ## Model Usage
 
@@ -176,6 +199,9 @@ mkdir checkpoints
 ```
 
 Then download the models from our 🤗HF repo below, and move them to the `checkpoints` folder.
+
+*: To facilitate reproducibility, we release [**DIM-4.6B-Edit-Stage1**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit-Stage1), which is trained solely on the **UltraEdit** dataset.  
+By fine-tuning this checkpoint on our proposed [**DIM-Edit**](https://huggingface.co/datasets/stdKonjac/DIM-Edit) dataset, you should obtain [**DIM-4.6B-Edit**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit).
 
 | Model                                                                             |     Task      |       Training Data        | ImgEdit |   Parameters    |
 |:----------------------------------------------------------------------------------|:-------------:|:--------------------------:|:-------:|:---------------:|
@@ -242,18 +268,27 @@ just a placeholder.
 In `infer/demo_edit.py`, use the `set_designer_gpt` API with your own key to set GPT-4o as the external designer for
 optimal performance.
 
-```
-model.set_designer_gpt(api_key='') # DIM-4.6B-Edit
+```python
+# GPT-4o as external designer
+model.set_designer_gpt(api_key='')
 ```
 
-You can also use the `set_designer_qwen` API to set Qwen2.5-VL-XB as the external designer. Qwen models will be
-automatically
-downloaded
-to local disk.
+You can also use the `set_designer_X` API to set various open-source VLMs as the external designer. The VLMs will be
+automatically downloaded to local disk.
 
-```
-model.set_designer_qwen(version='Qwen/Qwen2.5-VL-3B-Instruct') # DIM-4.6B-Edit-Q3B
-model.set_designer_qwen(version='Qwen/Qwen2.5-VL-7B-Instruct') # DIM-4.6B-Edit-Q7B
+```python
+# Qwen2.5-VL as external designer
+model.set_designer_qwen(version='Qwen/Qwen2.5-VL-3B-Instruct')
+model.set_designer_qwen(version='Qwen/Qwen2.5-VL-7B-Instruct')
+
+# InternVL3.5 as external designer (recommend using transformers==4.53.0)
+model.set_designer_internvl(version='OpenGVLab/InternVL3_5-8B-HF')
+
+# MiMo-VL as external designer
+model.set_designer_mimo(version='XiaomiMimo/MiMo-VL-7B-RL-2508')
+
+# GLM-4.1V as external designer (recommend using transformers==4.53.1)
+model.set_designer_glm(version='THUDM/GLM-4.1V-9B-Thinking')
 ```
 
 To generate edited images from the jsonl file, run the following script:
