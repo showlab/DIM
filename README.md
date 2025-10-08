@@ -199,7 +199,7 @@ mkdir checkpoints
 
 Then download the models from our 🤗HF repo below, and move them to the `checkpoints` folder.
 
-*: To facilitate reproducibility, we release [**DIM-4.6B-Edit-Stage1**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit-Stage1), which is trained solely on the **UltraEdit** dataset.  
+*: To facilitate reproducibility, we release [**DIM-4.6B-Edit-Stage1**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit-Stage1), which is trained solely on the **UltraEdit** dataset. 
 By fine-tuning this checkpoint on our proposed [**DIM-Edit**](https://huggingface.co/datasets/stdKonjac/DIM-Edit) dataset, you should obtain [**DIM-4.6B-Edit**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit).
 
 | Model                                                                             |     Task      |       Training Data        | ImgEdit |   Parameters    |
