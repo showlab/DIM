@@ -2,7 +2,7 @@
 
 [![arXiv](https://img.shields.io/badge/Paper-arXiv-b31b1b.svg?logo=arxiv)](https://arxiv.org/abs/2509.01986)
 [![Code](https://img.shields.io/badge/Code-GitHub-blue?logo=github)](https://github.com/showlab/DIM)
-[![Hugging Face Datasets](https://img.shields.io/badge/🤗%20%20Dataset-DIM--Edit-yellow.svg)](https://huggingface.co/stdKonjac/DIM-Edit)
+[![Hugging Face Datasets](https://img.shields.io/badge/🤗%20%20Dataset-DIM--Edit-yellow.svg)](https://huggingface.co/datasets/stdKonjac/DIM-Edit)
 [![Hugging Face Models](https://img.shields.io/badge/🤗%20%20Model-DIM--4.6B--T2I-orange.svg)](https://huggingface.co/stdKonjac/DIM-4.6B-T2I)
 [![Hugging Face Models](https://img.shields.io/badge/🤗%20%20Model-DIM--4.6B--Edit-orange.svg)](https://huggingface.co/stdKonjac/DIM-4.6B-Edit)
 
@@ -118,7 +118,44 @@ models trained on different data corpora.
 
 ## Dataset Usage
 
-The dataset is under review, we will release it once the review procedure finished. Please stay tuned :)
+### DIM-T2I
+
+Not available yet.
+
+### DIM-Edit
+
+Please first download [**DIM-Edit**](https://huggingface.co/datasets/stdKonjac/DIM-Edit) from our 🤗HF repo. You can use
+`huggingface-cli` to download it quickly:
+
+```
+# 1. Install the huggingface hub tools (if not yet installed)
+pip install -U huggingface_hub
+
+# 2. Log in with your Hugging Face account token
+huggingface-cli login
+
+# 3. Download the dataset (it may take several hours depending on network speed)
+huggingface-cli download stdKonjac/DIM-Edit --repo-type dataset --local-dir ./DIM-Edit
+```
+
+After downloading, navigate into the dataset folder, merge and extract the split archives using the following bash
+commands:
+
+```
+cd DIM-Edit
+cat images.tar.gz.part* > images.tar.gz
+tar -xvzf images.tar.gz
+```
+
+In the meantime, you will find a JSONL file named `tos_dataset_edit.jsonl` in the root directory, which records all
+image editing samples. Each line in this file corresponds to a single sample containing four fields:
+
+| Field                 | Description                                                                               |
+|:----------------------|:------------------------------------------------------------------------------------------|
+| **id**                | Unique identifier for each sample.                                                        |
+| **image_path**        | Path to the **source** image, beginning with `image/`.                                    |
+| **image_path_target** | Path to the **target** image, beginning with `image/`.                                    |
+| **prompt**            | The CoT-style editing instruction describing how to transform the source into the target. |
 
 ## Model Usage
 
