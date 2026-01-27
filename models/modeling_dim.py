@@ -795,7 +795,7 @@ class DIM(nn.Module):
     def set_designer_gpt(self, api_key, version='gpt-4o-2024-11-20'):
         import openai
         self.designer = openai.AzureOpenAI(
-            azure_endpoint="",
+            azure_endpoint=os.environ['AZURE_ENDPOINT'],
             api_version="2024-11-20",
             api_key=api_key
         )

@@ -44,14 +44,14 @@ if __name__ == "__main__":
 
     # <----------gen CoT data begin---------->
     # GPT-4o as external designer
-    # model.set_designer_gpt(api_key='')
+    model.set_designer_gpt(api_key=os.environ['OPENAI_API_KEY'])
 
     # Qwen2.5-VL as external designer
     # model.set_designer_qwen(version='Qwen/Qwen2.5-VL-3B-Instruct')
     # model.set_designer_qwen(version='Qwen/Qwen2.5-VL-7B-Instruct')
 
     # InternVL3.5 as external designer
-    model.set_designer_internvl(version='OpenGVLab/InternVL3_5-8B-HF')
+    # model.set_designer_internvl(version='OpenGVLab/InternVL3_5-8B-HF')
 
     # MiMo-VL as external designer
     # model.set_designer_mimo(version='XiaomiMimo/MiMo-VL-7B-RL-2508')

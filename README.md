@@ -1,4 +1,4 @@
-# Draw-In-Mind: Rebalancing Designer-Painter Roles in Unified Multimodal Models Benefits Image Editing
+# [ICLR 2026] Draw-In-Mind: Rebalancing Designer-Painter Roles in Unified Multimodal Models Benefits Image Editing
 
 [![arXiv](https://img.shields.io/badge/Paper-arXiv-b31b1b.svg?logo=arxiv)](https://arxiv.org/abs/2509.01986)
 [![Code](https://img.shields.io/badge/Code-GitHub-blue?logo=github)](https://github.com/showlab/DIM)
@@ -9,6 +9,8 @@
 ![DIM-Edit](assets/dim_edit.png)
 
 ## 📰 News
+
+**[2026-01-26]** **DIM** is accepted to ICLR 2026 🎉🎉
 
 **[2025-10-08]** We release the **DIM-Edit** dataset and the **DIM-4.6B-T2I** / **DIM-4.6B-Edit** models.
 
@@ -269,7 +271,7 @@ optimal performance.
 
 ```python
 # GPT-4o as external designer
-model.set_designer_gpt(api_key='')
+model.set_designer_gpt(api_key=os.environ['OPENAI_API_KEY'])
 ```
 
 You can also use the `set_designer_X` API to set various open-source VLMs as the external designer. The VLMs will be
