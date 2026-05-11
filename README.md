@@ -1,6 +1,7 @@
 # [ICLR 2026] Draw-In-Mind: Rebalancing Designer-Painter Roles in Unified Multimodal Models Benefits Image Editing
 
-[Ziyun Zeng](https://stdkonjac.icu/), [David Junhao Zhang](https://junhaozhang98.github.io/), Wei Li, and [Mike Zheng Shou](https://cde.nus.edu.sg/ece/staff/shou-zheng-mike/)
+[Ziyun Zeng](https://stdkonjac.icu/), [David Junhao Zhang](https://junhaozhang98.github.io/), Wei Li,
+and [Mike Zheng Shou](https://cde.nus.edu.sg/ece/staff/shou-zheng-mike/)
 
 [![arXiv](https://img.shields.io/badge/arXiv-Paper-b31b1b.svg?logo=arxiv)](https://arxiv.org/abs/2509.01986)
 [![Project Page](https://img.shields.io/badge/Website-Project%20Page-green?logo=googlechrome&logoColor=white)](https://showlab.github.io/DIM/)
@@ -24,7 +25,8 @@
   *painting*.
 - 📚 **Two complementary datasets**: **DIM-T2I** (long-context T2I pairs) and **DIM-Edit** (CoT imaginations from
   GPT-4o).
-- ⚡ **Lightweight & efficient**: A ❄️frozen 3.0B VLM and a 🔥trainable 1.6B DiT connected via a single MLP (4.6B params in total).
+- ⚡ **Lightweight & efficient**: A ❄️frozen 3.0B VLM and a 🔥trainable 1.6B DiT connected via a single MLP (4.6B params
+  in total).
 - 🏆 **SOTA-competitive**: DIM-4.6B-Edit matches or surpasses much larger models on **ImgEdit** and **GEdit-Bench**.
 
 ## 💡 Introduction
@@ -127,24 +129,20 @@ generation module focuses on rendering. Despite its modest size, DIM-4.6B-Edit a
 
 ## 📦 Dataset
 
-### DIM-T2I
-
-> 🚧 Not available yet. Coming soon — stay tuned!
-
 ### DIM-Edit
 
 **Step 1.** Download [**DIM-Edit**](https://huggingface.co/datasets/stdKonjac/DIM-Edit) from our 🤗 HF repo using
-`huggingface-cli`:
+the `hf` CLI:
 
 ```bash
-# 1. Install the huggingface hub tools (if not yet installed)
+# 1. Install the huggingface_hub library (>= 0.32.0 for hf_xet support)
 pip install -U huggingface_hub
 
 # 2. Log in with your Hugging Face account token
-huggingface-cli login
+hf auth login
 
 # 3. Download the dataset
-huggingface-cli download stdKonjac/DIM-Edit --repo-type dataset --local-dir ./DIM-Edit
+hf download stdKonjac/DIM-Edit --repo-type dataset --local-dir ./DIM-Edit
 ```
 
 **Step 2.** Merge and extract the split archives:
@@ -186,9 +184,13 @@ ds = load_dataset(
 print(ds[0])
 ```
 
-### 📜 Dataset License
+#### 📜 DIM-Edit License
 
-The dataset is released under the [CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) license.
+The **DIM-Edit** dataset is released under the [CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) license.
+
+### DIM-T2I
+
+Please refer to [`T2I_DATASET.md`](https://github.com/showlab/DIM/blob/main/data/T2I_DATASET.md) for download instructions and licensing details.
 
 ## 🚀 Model
 
@@ -207,7 +209,8 @@ into `checkpoints/`.
 mkdir checkpoints
 ```
 
-> 💡 To facilitate reproducibility, we release [**DIM-4.6B-Edit-Stage1**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit-Stage1),
+> 💡 To facilitate reproducibility, we release [**DIM-4.6B-Edit-Stage1
+**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit-Stage1),
 > which is trained solely on the **UltraEdit** dataset. Fine-tuning this checkpoint on our proposed
 > [**DIM-Edit**](https://huggingface.co/datasets/stdKonjac/DIM-Edit) dataset should reproduce
 > [**DIM-4.6B-Edit**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit).
