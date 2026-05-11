@@ -210,8 +210,7 @@ into `checkpoints/`.
 mkdir checkpoints
 ```
 
-> 💡 To facilitate reproducibility, we release [**DIM-4.6B-Edit-Stage1
-**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit-Stage1),
+> 💡 To facilitate reproducibility, we release [**DIM-4.6B-Edit-Stage1**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit-Stage1),
 > which is trained solely on the **UltraEdit** dataset. Fine-tuning this checkpoint on our proposed
 > [**DIM-Edit**](https://huggingface.co/datasets/stdKonjac/DIM-Edit) dataset should reproduce
 > [**DIM-4.6B-Edit**](https://huggingface.co/stdKonjac/DIM-4.6B-Edit).
