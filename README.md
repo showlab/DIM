@@ -15,6 +15,7 @@ and [Mike Zheng Shou](https://cde.nus.edu.sg/ece/staff/shou-zheng-mike/)
 
 ## 📰 News
 
+- **`[2026-05-12]`** The **DIM** [project page](https://showlab.github.io/DIM/) is available.
 - **`[2026-01-26]`** 🎉 **DIM** is accepted to **ICLR 2026**!
 - **`[2025-10-08]`** 🚀 Released the **DIM-Edit** dataset and the **DIM-4.6B-T2I** / **DIM-4.6B-Edit** models.
 - **`[2025-09-02]`** 📝 The **DIM** paper is released on arXiv.

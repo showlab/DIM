@@ -6,9 +6,9 @@ Due to legal and licensing constraints of the underlying sources, we currently r
 
 To help users fully reproduce the results reported in our paper, we have released our fully-trained models and the complete editing dataset:
 
-- **DIM-4.6B-T2I**: [🤗`stdKonjac/DIM-4.6B-T2I`](https://huggingface.co/stdKonjac/DIM-4.6B-T2I)
-- **DIM-4.6B-Edit**: [🤗`stdKonjac/DIM-4.6B-Edit`](https://huggingface.co/stdKonjac/DIM-4.6B-Edit)
-- **DIM-Edit**: [🤗`stdKonjac/DIM-Edit`](https://huggingface.co/datasets/stdKonjac/DIM-Edit)
+- **DIM-4.6B-T2I**: 🤗[`stdKonjac/DIM-4.6B-T2I`](https://huggingface.co/stdKonjac/DIM-4.6B-T2I)
+- **DIM-4.6B-Edit**: 🤗[`stdKonjac/DIM-4.6B-Edit`](https://huggingface.co/stdKonjac/DIM-4.6B-Edit)
+- **DIM-Edit**: 🤗[`stdKonjac/DIM-Edit`](https://huggingface.co/datasets/stdKonjac/DIM-Edit)
 
 This document describes how to obtain the source images for each sub-source of the released DIM-T2I data.
 
@@ -29,7 +29,7 @@ This document describes how to obtain the source images for each sub-source of t
 
 ## 📥 Caption Metadata Download
 
-Our captions and per-sample metadata are hosted at [🤗`stdKonjac/DIM-T2I`](https://huggingface.co/datasets/stdKonjac/DIM-T2I). Download them with the `hf` CLI:
+Our captions and per-sample metadata are hosted at 🤗[`stdKonjac/DIM-T2I`](https://huggingface.co/datasets/stdKonjac/DIM-T2I). Download them with the `hf` CLI:
 
 ```bash
 # 1. Install the huggingface_hub library (>= 0.32.0 for hf_xet support)
