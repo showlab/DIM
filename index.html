@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Draw-In-Mind: Rebalancing Designer-Painter Roles in Unified Multimodal Models Benefits Image Editing</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>"/>
+
+    <meta name="description"
+          content="Draw-In-Mind (DIM): rebalancing designer and painter roles in unified multimodal models for precise instruction-guided image editing."/>
+    <meta property="og:title" content="Draw-In-Mind (DIM) — ICLR 2026"/>
+    <meta property="og:description"
+          content="A 4.6B unified model that rebalances designer-painter roles, achieving SOTA-competitive image editing with a frozen VLM + trainable DiT connected via a single MLP."/>
+    <meta property="og:type" content="website"/>
+    <meta name="twitter:card" content="summary_large_image"/>
+
+    <base target="_blank"/>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet"/>
+
+    <style>
+        :root {
+            --dim-blue:   #7CA7D8;
+            --dim-green:  #7EAF5D;
+            --dim-red:    #D16E6A;
+            --dim-orange: #ECB575;
+            --dim-purple: #A684C7;
+            --dim-coral:  #E8746C;
+            --bg-soft: #fafafa;
+            --text-main: #1a1a1a;
+            --text-muted: #555;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-main);
+            background: #ffffff;
+            line-height: 1.65;
+        }
+
+        code, pre {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ============ Hero ============ */
+        .hero {
+            padding: 4rem 1rem 2.5rem;
+            text-align: center;
+            background: linear-gradient(180deg, #ffffff 0%, var(--bg-soft) 100%);
+        }
+
+        .hero-venue-line {
+            font-style: italic;
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            margin-bottom: 1.6rem;
+        }
+
+        .hero-title {
+            font-size: clamp(1.5rem, 3.2vw, 2.2rem);
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 1.2rem;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title br {
+                display: none;
+            }
+        }
+
+        .hero-authors {
+            font-size: 1.05rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .hero-authors sup,
+        .hero-affil sup {
+            color: var(--dim-coral);
+            font-weight: 600;
+        }
+
+        .hero-affil {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.6rem;
+            margin-top: 0.6rem;
+        }
+
+        .btn-pill {
+            padding: 0.55rem 1.2rem;
+            border-radius: 999px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+
+        .btn-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-paper   { background: #1a1a1a; color: white; }
+        .btn-code    { background: #2d2d2d; color: white; }
+        .btn-dataset { background: var(--dim-orange); color: #2a1a00; }
+        .btn-model   { background: var(--dim-orange); color: #2a1a00; }
+
+        /* ============ Sections ============ */
+        section {
+            padding: 3rem 1rem;
+        }
+
+        section.alt {
+            background: var(--bg-soft);
+        }
+
+        .section-title {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-bottom: 1.4rem;
+            text-align: center;
+        }
+
+        .section-body {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .section-body p {
+            font-size: 1.02rem;
+            color: var(--text-main);
+        }
+
+        /* ============ 4-column comparison grid (Source / Janus-4o / Step1X-Edit / DIM) ============ */
+        .grid-wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .method-header {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.6rem;
+            max-width: 1200px;
+            margin: 0 auto 0.6rem;
+        }
+
+        .method-header span {
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-main);
+            padding-bottom: 0.4rem;
+            border-bottom: 2px solid #e5e5e5;
+        }
+
+        .method-header .ours-col {
+            color: #8a5b00;
+            border-bottom-color: var(--dim-orange);
+        }
+
+        .comp-row-4 {
+            margin-bottom: 1.6rem;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.6rem;
+        }
+
+        .grid-4 img {
+            width: 100%;
+            border-radius: 8px;
+            display: block;
+            background: #f0f0f0;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+        }
+
+        .comp-prompt {
+            text-align: center;
+            margin: 0.7rem auto 0;
+            max-width: 1100px;
+            padding: 0 1rem;
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            font-style: italic;
+            line-height: 1.55;
+        }
+
+        @media (max-width: 768px) {
+            .method-header { grid-template-columns: repeat(2, 1fr); }
+            .grid-4        { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* ============ Subsection (category) header ============ */
+        .cat-header {
+            max-width: 1200px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .cat-chip {
+            padding: 0.3rem 0.95rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .cat-chip.addition    { background: #dfead0; color: #4a7332; }
+        .cat-chip.change      { background: #dbe7f4; color: #3a6da3; }
+        .cat-chip.removal     { background: #f1d7d4; color: #9d3b37; }
+        .cat-chip.replacement { background: #f8e6c4; color: #876020; }
+        .cat-chip.style       { background: #e6dcf0; color: #604380; }
+
+        .cat-block {
+            margin-bottom: 3rem;
+        }
+
+        /* ============ Teaser groups (row1: 1×4 baseline / row2: CoT + DIM result) ============ */
+        .teaser-group {
+            margin-bottom: 3.5rem;
+        }
+        .teaser-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .cot-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 1.4rem auto 0.6rem;
+        }
+        .cot-header span {
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-main);
+            padding-bottom: 0.4rem;
+            border-bottom: 2px solid #e5e5e5;
+        }
+        .cot-header .ours-col {
+            color: #8a5b00;
+            border-bottom-color: var(--dim-orange);
+        }
+
+        .teaser-cot-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .cot-trace {
+            background: white;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 1rem 1.1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            aspect-ratio: 1 / 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+        .cot-trace::-webkit-scrollbar       { width: 6px; }
+        .cot-trace::-webkit-scrollbar-track { background: transparent; }
+        .cot-trace::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        .cot-trace::-webkit-scrollbar-thumb:hover { background: #999; }
+        .cot-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+        }
+        .cot-number {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--dim-orange);
+            color: #2a1a00;
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.1rem;
+        }
+        .cot-body {
+            flex: 1;
+            min-width: 0;
+        }
+        .cot-label {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.15rem;
+        }
+        .cot-content {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            font-style: italic;
+        }
+
+        .cot-result img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 8px;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .cot-header     { grid-template-columns: 1fr; }
+            .teaser-cot-row { grid-template-columns: 1fr; }
+            .cot-trace      { aspect-ratio: auto; overflow-y: visible; }
+        }
+
+        /* Capability chip for teaser groups */
+        .cap-chip {
+            padding: 0.4rem 1.2rem;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            background: #fff0d6;
+            color: #8a5b00;
+            border: 1px solid #f0d8a0;
+            letter-spacing: 0.01em;
+        }
+
+        /* Bulleted lists inside cot-content */
+        .cot-content .cot-list {
+            margin: 0.25rem 0 0;
+            padding-left: 1.1rem;
+            list-style: disc;
+        }
+        .cot-content .cot-list li {
+            margin-bottom: 0.2rem;
+            line-height: 1.5;
+        }
+        .cot-content .cot-list li:last-child { margin-bottom: 0; }
+        .cot-content .cot-list b {
+            color: var(--text-main);
+            font-style: normal;
+        }
+
+
+        /* ============ Method figure ============ */
+        .figure-wrap {
+            max-width: 1100px;
+            margin: 1.8rem auto 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        .figure-wrap img {
+            width: 100%;
+            display: block;
+        }
+
+        /* ============ Tables ============ */
+        .results-table {
+            max-width: 1100px;
+            margin: 0 auto;
+            font-size: 0.9rem;
+        }
+
+        .results-table th, .results-table td {
+            padding: 0.5rem 0.6rem;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .results-table tbody td:first-child {
+            text-align: left;
+        }
+
+        .results-table thead th {
+            background: var(--bg-soft);
+            border-bottom: 2px solid #ddd;
+            font-weight: 600;
+        }
+
+        .ours-row {
+            background: #fff7e6;
+            font-weight: 600;
+        }
+
+        .table-caption {
+            text-align: center;
+            margin: 0 0 1rem;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        /* ============ BibTeX ============ */
+        .bibtex-box {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            color: #f0f0f0;
+            border-radius: 8px;
+            padding: 1.2rem 1.4rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.55;
+            overflow-x: auto;
+        }
+
+        /* ============ Footer ============ */
+        footer {
+            padding: 2rem 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ============ Hero ============ -->
+<header class="hero">
+    <h1 class="hero-title">
+        Draw-In-Mind: Rebalancing Designer-Painter Roles<br/>
+        in Unified Multimodal Models Benefits Image Editing
+    </h1>
+
+    <p class="hero-authors">
+        <a href="https://stdkonjac.icu/">Ziyun Zeng</a><sup>1</sup>,
+        <a href="https://junhaozhang98.github.io/">David Junhao Zhang</a><sup>1</sup>,
+        Wei Li<sup>2</sup>,
+        <a href="https://cde.nus.edu.sg/ece/staff/shou-zheng-mike/">Mike Zheng Shou</a><sup>1</sup>
+    </p>
+    <p class="hero-affil">
+        <sup>1</sup><a href="https://sites.google.com/view/showlab">Show Lab</a>, National University of Singapore
+        &nbsp;&nbsp;&nbsp;
+        <sup>2</sup>TikTok
+    </p>
+    <p class="hero-venue-line">Published as a conference paper at ICLR 2026</p>
+
+    <div class="btn-row">
+        <a class="btn-pill btn-paper" href="https://arxiv.org/abs/2509.01986">
+            <i class="bi bi-file-earmark-text"></i> Paper
+        </a>
+        <a class="btn-pill btn-code" href="https://github.com/showlab/DIM">
+            <i class="bi bi-github"></i> Code
+        </a>
+        <a class="btn-pill btn-dataset" href="https://huggingface.co/datasets/stdKonjac/DIM-Edit">
+            🤗 Dataset (DIM-Edit)
+        </a>
+        <a class="btn-pill btn-dataset" href="https://huggingface.co/datasets/stdKonjac/DIM-T2I">
+            🤗 Dataset (DIM-T2I)
+        </a>
+        <a class="btn-pill btn-model" href="https://huggingface.co/stdKonjac/DIM-4.6B-Edit">
+            🤗 Model (DIM-4.6B-Edit)
+        </a>
+        <a class="btn-pill btn-model" href="https://huggingface.co/stdKonjac/DIM-4.6B-T2I">
+            🤗 Model (DIM-4.6B-T2I)
+        </a>
+    </div>
+</header>
+
+<!-- ============ Teaser: 5 inference groups (row1: 1×4 baselines, row2: CoT + DIM w/ CoT) ============ -->
+<section>
+    <h2 class="section-title">Unique Capabilities Unlocked by Draw-In-Mind</h2>
+    <div class="grid-wrap">
+
+        <!-- ===== Teaser group 1: Instruction Disambiguation ===== -->
+        <div class="teaser-group">
+
+            <div class="cat-header">
+                <span class="cap-chip">Instruction Disambiguation</span>
+            </div>
+
+            <!-- Row 1: 1×4 baselines + DIM w/o CoT -->
+            <div class="method-header">
+                <span>Source</span>
+                <span>Janus-4o</span>
+                <span>Step1X-Edit</span>
+                <span class="ours-col">DIM-4.6B-Edit (w/o CoT)</span>
+            </div>
+            <div class="grid-4">
+                <img src="assets/teaser/teaser_01_source.png"     alt="Teaser 1 source"/>
+                <img src="assets/teaser/teaser_01_janus4o.png"    alt="Teaser 1 Janus-4o"/>
+                <img src="assets/teaser/teaser_01_step1x.png"     alt="Teaser 1 Step1X-Edit"/>
+                <img src="assets/teaser/teaser_01_dim_no_cot.png" alt="Teaser 1 DIM-4.6B-Edit w/o CoT"/>
+            </div>
+            <p class="comp-prompt">Remove the lemons on the table.</p>
+
+            <!-- Row 2: CoT trace + DIM result with CoT -->
+            <div class="cot-header">
+                <span>Chain-of-Thought</span>
+                <span class="ours-col">DIM-4.6B-Edit (w/ CoT)</span>
+            </div>
+            <div class="teaser-cot-row">
+                <div class="cot-trace">
+                <div class="cot-step">
+                    <span class="cot-number">1</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edit Instruction</div>
+                        <div class="cot-content">Remove the lemons on the table.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">2</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Global Layout Perception</div>
+                        <div class="cot-content">The image features a vase with pink lilies placed on a table near a window. To the right of the vase, there are three lemons and a glass of yellow liquid. In the foreground, there is a plate of clams. The background shows a blurred green outdoor scene visible through the window.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">3</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Local Object Perception</div>
+                        <div class="cot-content"><ul class="cot-list"><li><b>Vase</b>: Transparent glass vase with water, holding pink lilies with green leaves.</li><li><b>Pink Lilies</b>: Large, vibrant pink flowers with dark stamens and green leaves.</li><li><b>Lemons</b>: Three bright yellow lemons with a smooth, slightly textured surface.</li><li><b>Glass of Yellow Liquid</b>: A clear glass filled with a pale yellow drink, positioned to the right of the lemons.</li><li><b>Plate of Clams</b>: A white plate containing opened clams with brown and orange shells.</li><li><b>Tablecloth</b>: White lace tablecloth with intricate patterns.</li><li><b>Background</b>: Blurred green outdoor scenery visible through the window.</li></ul></div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">4</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edit Area Localization</div>
+                        <div class="cot-content">The three lemons on the table will be removed.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">5</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edited Image Imagination</div>
+                        <div class="cot-content">The edited image will no longer have the three lemons on the table. The space where the lemons were will now show the white lace tablecloth uninterrupted, maintaining the overall composition of the scene. The vase, pink lilies, glass of yellow liquid, and plate of clams will remain unchanged, and the focus will shift slightly more to these elements.</div>
+                    </div>
+                </div>
+                </div>
+                <div class="cot-result">
+                    <img src="assets/teaser/teaser_01_dim.png" alt="Teaser 1 DIM-4.6B-Edit w/ CoT"/>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== Teaser group 2: Edit Navigation and Structural Planning ===== -->
+        <div class="teaser-group">
+
+            <div class="cat-header">
+                <span class="cap-chip">Edit Navigation and Structural Planning</span>
+            </div>
+
+            <!-- Row 1: 1×4 baselines + DIM w/o CoT -->
+            <div class="method-header">
+                <span>Source</span>
+                <span>Janus-4o</span>
+                <span>Step1X-Edit</span>
+                <span class="ours-col">DIM-4.6B-Edit (w/o CoT)</span>
+            </div>
+            <div class="grid-4">
+                <img src="assets/teaser/teaser_02_source.png"     alt="Teaser 2 source"/>
+                <img src="assets/teaser/teaser_02_janus4o.png"    alt="Teaser 2 Janus-4o"/>
+                <img src="assets/teaser/teaser_02_step1x.png"     alt="Teaser 2 Step1X-Edit"/>
+                <img src="assets/teaser/teaser_02_dim_no_cot.png" alt="Teaser 2 DIM-4.6B-Edit w/o CoT"/>
+            </div>
+            <p class="comp-prompt">Add a small wooden cabin with a chimney near the edge of the forest on the right side of the image.</p>
+
+            <!-- Row 2: CoT trace + DIM result with CoT -->
+            <div class="cot-header">
+                <span>Chain-of-Thought</span>
+                <span class="ours-col">DIM-4.6B-Edit (w/ CoT)</span>
+            </div>
+            <div class="teaser-cot-row">
+                <div class="cot-trace">
+                <div class="cot-step">
+                    <span class="cot-number">1</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edit Instruction</div>
+                        <div class="cot-content">Add a small wooden cabin with a chimney near the edge of the forest on the right side of the image.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">2</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Global Layout Perception</div>
+                        <div class="cot-content">The image features a flowing river in the foreground with white rapids. Behind the river is a dense forest of evergreen trees, extending across the middle of the image. In the background, a large mountain rises prominently, partially obscured by the trees. The right side of the image shows the edge of the forest, where the trees thin out slightly.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">3</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Local Object Perception</div>
+                        <div class="cot-content"><ul class="cot-list"><li><b>River</b>: White, frothy water with visible rapids and rocks protruding from the surface. The texture is turbulent and dynamic.</li><li><b>Forest</b>: Tall evergreen trees with green needles, some showing signs of brown discoloration. The trees are densely packed, with slight thinning on the right edge.</li><li><b>Mountain</b>: Grayish rock with rugged texture and steep slopes, partially covered by darker patches of vegetation.</li><li><b>Sky</b>: Pale and overcast, with soft lighting.</li></ul></div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">4</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edit Area Localization</div>
+                        <div class="cot-content">The right side of the image, near the edge of the forest where the trees thin out slightly, will be modified to include the wooden cabin with a chimney.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">5</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edited Image Imagination</div>
+                        <div class="cot-content">A small wooden cabin with a slanted roof and visible wooden planks will appear near the edge of the forest on the right side. The cabin will have a stone chimney emitting a thin trail of smoke, blending naturally with the overcast sky. The cabin will be positioned slightly behind the nearest trees, partially obscured by their branches, to maintain a realistic integration into the scene. The surrounding forest and river will remain unchanged.</div>
+                    </div>
+                </div>
+                </div>
+                <div class="cot-result">
+                    <img src="assets/teaser/teaser_02_dim.png" alt="Teaser 2 DIM-4.6B-Edit w/ CoT"/>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== Teaser group 3: Commonsense-guarded Editing ===== -->
+        <div class="teaser-group">
+
+            <div class="cat-header">
+                <span class="cap-chip">Commonsense-guarded Editing</span>
+            </div>
+
+            <!-- Row 1: 1×4 baselines + DIM w/o CoT -->
+            <div class="method-header">
+                <span>Source</span>
+                <span>Janus-4o</span>
+                <span>Step1X-Edit</span>
+                <span class="ours-col">DIM-4.6B-Edit (w/o CoT)</span>
+            </div>
+            <div class="grid-4">
+                <img src="assets/teaser/teaser_03_source.png"     alt="Teaser 3 source"/>
+                <img src="assets/teaser/teaser_03_janus4o.png"    alt="Teaser 3 Janus-4o"/>
+                <img src="assets/teaser/teaser_03_step1x.png"     alt="Teaser 3 Step1X-Edit"/>
+                <img src="assets/teaser/teaser_03_dim_no_cot.png" alt="Teaser 3 DIM-4.6B-Edit w/o CoT"/>
+            </div>
+            <p class="comp-prompt">Replace the horse in the image with a cat.</p>
+
+            <!-- Row 2: CoT trace + DIM result with CoT -->
+            <div class="cot-header">
+                <span>Chain-of-Thought</span>
+                <span class="ours-col">DIM-4.6B-Edit (w/ CoT)</span>
+            </div>
+            <div class="teaser-cot-row">
+                <div class="cot-trace">
+                <div class="cot-step">
+                    <span class="cot-number">1</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edit Instruction</div>
+                        <div class="cot-content">Replace the horse in the image with a cat.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">2</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Global Layout Perception</div>
+                        <div class="cot-content">The image features a horse standing in a grassy field. The field is covered with frost and scattered leaves. In the background, there is a line of tall, leafless trees, and the sun is shining through the trees, creating long shadows across the ground.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">3</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Local Object Perception</div>
+                        <div class="cot-content"><ul class="cot-list"><li><b>Horse</b>: Positioned slightly left of center, the horse is light beige in color with a smooth texture and a visible harness. It is standing still, facing slightly to the left.</li><li><b>Field</b>: The ground is covered with frosty grass and scattered brown leaves, giving it a textured appearance.</li><li><b>Trees</b>: Tall, leafless trees with intricate branches form the background. They are dark brown and silhouetted against the bright sunlight.</li><li><b>Sunlight</b>: The sun is low in the sky, casting warm golden light and long shadows across the field.</li></ul></div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">4</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edit Area Localization</div>
+                        <div class="cot-content">The horse will be replaced with a cat. The area of change is the space occupied by the horse, including its immediate surroundings to ensure the cat is seamlessly integrated into the scene.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">5</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edited Image Imagination</div>
+                        <div class="cot-content">The horse is replaced by a cat, which is smaller in size and positioned in the same area slightly left of center. The cat is sitting or standing, with fur that could be a similar beige color to match the lighting and overall tone of the image. The frosty field, trees, and sunlight remain unchanged, with the cat casting a smaller shadow on the ground due to its size. The scene retains its tranquil and warm atmosphere.</div>
+                    </div>
+                </div>
+                </div>
+                <div class="cot-result">
+                    <img src="assets/teaser/teaser_03_dim.png" alt="Teaser 3 DIM-4.6B-Edit w/ CoT"/>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== Teaser group 4: Advanced Causal Editing ===== -->
+        <div class="teaser-group">
+
+            <div class="cat-header">
+                <span class="cap-chip">Advanced Causal Editing</span>
+            </div>
+
+            <!-- Row 1: 1×4 baselines + DIM w/o CoT -->
+            <div class="method-header">
+                <span>Source</span>
+                <span>Janus-4o</span>
+                <span>Step1X-Edit</span>
+                <span class="ours-col">DIM-4.6B-Edit (w/o CoT)</span>
+            </div>
+            <div class="grid-4">
+                <img src="assets/teaser/teaser_04_source.png"     alt="Teaser 4 source"/>
+                <img src="assets/teaser/teaser_04_janus4o.png"    alt="Teaser 4 Janus-4o"/>
+                <img src="assets/teaser/teaser_04_step1x.png"     alt="Teaser 4 Step1X-Edit"/>
+                <img src="assets/teaser/teaser_04_dim_no_cot.png" alt="Teaser 4 DIM-4.6B-Edit w/o CoT"/>
+            </div>
+            <p class="comp-prompt">Generate this still-life scene with cherries visible totaling the second prime number.</p>
+
+            <!-- Row 2: CoT trace + DIM result with CoT -->
+            <div class="cot-header">
+                <span>Chain-of-Thought</span>
+                <span class="ours-col">DIM-4.6B-Edit (w/ CoT)</span>
+            </div>
+            <div class="teaser-cot-row">
+                <div class="cot-trace">
+                <div class="cot-step">
+                    <span class="cot-number">1</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edit Instruction</div>
+                        <div class="cot-content">Generate this still-life scene with cherries visible totaling the second prime number.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">2</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Global Layout Perception</div>
+                        <div class="cot-content">The image depicts a still-life arrangement. Key objects include:<ul class="cot-list"><li>A glass goblet with a spiral lemon peel draped over it, located in the upper left quadrant.</li><li>A cluster of white grapes, positioned centrally and spilling slightly to the left.</li><li>Two lemons, one whole and one partially sliced, located in the lower left quadrant.</li><li>A large yellow fruit (possibly a grapefruit or melon) in the upper center-right.</li><li>A cluster of cherries, located in the lower right quadrant.</li><li>A green fabric draped over the table, forming the base of the composition.</li><li>A wooden table surface visible in the lower right corner.</li><li>Grape leaves and vines extending from the fruit, adding a naturalistic touch.</li></ul></div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">3</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Local Object Perception</div>
+                        <div class="cot-content"><ul class="cot-list"><li><b>Glass goblet</b>: Transparent, reflective, and elevated, with a spiral lemon peel (yellow, textured) hanging from it.</li><li><b>White grapes</b>: Round, translucent, and glossy, with a pale greenish-white hue.</li><li><b>Lemons</b>: Bright yellow with a textured rind; one is whole, and the other is sliced to reveal its juicy interior.</li><li><b>Large yellow fruit</b>: Smooth, round, and slightly textured, with a vibrant yellow color.</li><li><b>Cherries</b>: Small, round, and glossy, with a deep red hue and attached stems.</li><li><b>Green fabric</b>: Rich green, with folds and a soft texture, reflecting light.</li><li><b>Wooden table</b>: Brown, with a smooth surface and visible grain.</li><li><b>Grape leaves and vines</b>: Green and brown, with a natural, organic shape and texture.</li></ul></div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">4</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edit Area Localization</div>
+                        <div class="cot-content">The cluster of cherries in the lower right quadrant will be modified. The number of cherries will be adjusted to total the second prime number, which is 3.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">5</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edited Image Imagination</div>
+                        <div class="cot-content">The edited image will feature the same still-life arrangement, but the cluster of cherries in the lower right quadrant will now contain exactly three cherries. The cherries will remain deep red, glossy, and attached to their stems, but the excess cherries will be removed to meet the specified count. The rest of the composition, including the goblet, lemon peel, grapes, lemons, large yellow fruit, green fabric, and wooden table, will remain unchanged. The overall balance and aesthetic of the scene will be preserved.</div>
+                    </div>
+                </div>
+                </div>
+                <div class="cot-result">
+                    <img src="assets/teaser/teaser_04_dim.png" alt="Teaser 4 DIM-4.6B-Edit w/ CoT"/>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== Teaser group 5: Advanced Temporal Editing ===== -->
+        <div class="teaser-group">
+
+            <div class="cat-header">
+                <span class="cap-chip">Advanced Temporal Editing</span>
+            </div>
+
+            <!-- Row 1: 1×4 baselines + DIM w/o CoT -->
+            <div class="method-header">
+                <span>Source</span>
+                <span>Janus-4o</span>
+                <span>Step1X-Edit</span>
+                <span class="ours-col">DIM-4.6B-Edit (w/o CoT)</span>
+            </div>
+            <div class="grid-4">
+                <img src="assets/teaser/teaser_05_source.png"     alt="Teaser 5 source"/>
+                <img src="assets/teaser/teaser_05_janus4o.png"    alt="Teaser 5 Janus-4o"/>
+                <img src="assets/teaser/teaser_05_step1x.png"     alt="Teaser 5 Step1X-Edit"/>
+                <img src="assets/teaser/teaser_05_dim_no_cot.png" alt="Teaser 5 DIM-4.6B-Edit w/o CoT"/>
+            </div>
+            <p class="comp-prompt">What will these iron nails look like after soaking in 3% saltwater for 4 hours?</p>
+
+            <!-- Row 2: CoT trace + DIM result with CoT -->
+            <div class="cot-header">
+                <span>Chain-of-Thought</span>
+                <span class="ours-col">DIM-4.6B-Edit (w/ CoT)</span>
+            </div>
+            <div class="teaser-cot-row">
+                <div class="cot-trace">
+                <div class="cot-step">
+                    <span class="cot-number">1</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edit Instruction</div>
+                        <div class="cot-content">What will these iron nails look like after soaking in 3% saltwater for 4 hours?</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">2</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Global Layout Perception</div>
+                        <div class="cot-content">The image shows a transparent plastic cup filled with clear water. Inside the cup, there is a single iron nail submerged in the water. The cup is placed on a black fabric background, and the green wall is visible in the background.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">3</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Local Object Perception</div>
+                        <div class="cot-content"><ul class="cot-list"><li><b>Iron Nail</b>: The nail is metallic, straight, and has a shiny silver-gray surface. It appears smooth and uncorroded.</li><li><b>Water</b>: The water is clear and transparent, filling most of the cup.</li><li><b>Cup</b>: The cup is made of clear plastic, cylindrical in shape, and allows visibility of its contents.</li><li><b>Background</b>: The black fabric is textured and contrasts with the green wall behind it.</li></ul></div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">4</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edit Area Localization</div>
+                        <div class="cot-content">The iron nail inside the cup will change in appearance due to the soaking process.</div>
+                    </div>
+                </div>
+                <div class="cot-step">
+                    <span class="cot-number">5</span>
+                    <div class="cot-body">
+                        <div class="cot-label">Edited Image Imagination</div>
+                        <div class="cot-content">After soaking in 3% saltwater for 4 hours, the iron nail will likely show signs of corrosion. Its surface will appear duller, with possible reddish-brown rust spots forming, especially near the submerged portion. The water may also appear slightly cloudy due to the release of iron particles or rust. The cup and background will remain unchanged.</div>
+                    </div>
+                </div>
+                </div>
+                <div class="cot-result">
+                    <img src="assets/teaser/teaser_05_dim.png" alt="Teaser 5 DIM-4.6B-Edit w/ CoT"/>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- ============ Introduction ============ -->
+<section class="alt">
+    <h2 class="section-title">Introduction</h2>
+    <div class="section-body">
+        <p>
+            In recent years, integrating multimodal understanding and generation into a single unified model
+            has emerged as a promising paradigm. While this approach achieves strong results in text-to-image
+            (T2I) generation, it still struggles with precise image editing. We attribute this limitation to
+            an <em>imbalanced division of responsibilities</em>. The understanding module primarily functions
+            as a translator that encodes user instructions into semantic conditions, while the generation
+            module must simultaneously act as <b>designer</b> and <b>painter</b>, inferring the original
+            layout, identifying the target editing region, and rendering the new content. This imbalance is
+            counterintuitive because the understanding module is typically trained with several times more
+            data on complex reasoning tasks than the generation module.
+        </p>
+        <p>
+            To address this issue, we introduce <b>Draw-In-Mind (DIM)</b>, a dataset comprising two
+            complementary subsets: (i) <b>DIM-T2I</b>, containing 14M long-context image-text pairs to enhance
+            complex instruction comprehension; and (ii) <b>DIM-Edit</b>, consisting of 233K chain-of-thought
+            imaginations generated by GPT-4o, serving as explicit design blueprints for image edits. We
+            connect a frozen <b>Qwen2.5-VL-3B</b> with a trainable <b>SANA1.5-1.6B</b> via a lightweight
+            two-layer MLP, and train it on the proposed DIM dataset, resulting in <b>DIM-4.6B-T2I/Edit</b>.
+        </p>
+        <p>
+            Despite its modest parameter scale, DIM-4.6B-Edit achieves SOTA or competitive performance on the
+            <b>ImgEdit</b> and <b>GEdit-Bench</b> benchmarks, outperforming much larger models such as
+            UniWorld-V1 and Step1X-Edit. These findings demonstrate that explicitly assigning the design
+            responsibility to the understanding module provides significant benefits for image editing. Our
+            dataset and models are available at
+            <a href="https://github.com/showlab/DIM">github.com/showlab/DIM</a>.
+        </p>
+    </div>
+
+    <div class="figure-wrap" style="max-width: 900px;">
+        <img src="assets/dim_edit.png" alt="DIM-Edit overview"/>
+    </div>
+</section>
+
+<!-- ============ Qualitative Comparisons (5 categories × 4 prompts each) ============ -->
+<section>
+    <h2 class="section-title">Qualitative Comparisons</h2>
+    <div class="section-body">
+        <p style="text-align:center;">
+            By offloading the design decision to the understanding module, DIM-4.6B-Edit applies the requested
+            edit precisely while leaving non-edited regions intact, across common editing scenarios.
+        </p>
+    </div>
+
+    <div class="grid-wrap" style="margin-top: 2rem;">
+
+
+        <!-- ===== Object Addition ===== -->
+        <div class="cat-block">
+            <div class="cat-header">
+                <span class="cat-chip addition">Object Addition</span>
+            </div>
+
+            <div class="method-header">
+                <span>Source</span>
+                <span>Janus-4o</span>
+                <span>Step1X-Edit</span>
+                <span class="ours-col">DIM-4.6B-Edit (Ours)</span>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/add/add_01_source.png"  alt=""/>
+                    <img src="assets/comparisons/add/add_01_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/add/add_01_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/add/add_01_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Add a person walking along the dirt path, facing toward the ocean, wearing a backpack and casual hiking clothes.</p>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/add/add_02_source.png"  alt=""/>
+                    <img src="assets/comparisons/add/add_02_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/add/add_02_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/add/add_02_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Add a small wooden cabin with a chimney near the edge of the forest on the right side of the image.</p>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/add/add_03_source.png"  alt=""/>
+                    <img src="assets/comparisons/add/add_03_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/add/add_03_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/add/add_03_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Add a small wooden cabin to the left side of the image, near the tree, blending naturally with the landscape.</p>
+            </div>
+
+        </div>
+
+        <!-- ===== Object Change ===== -->
+        <div class="cat-block">
+            <div class="cat-header">
+                <span class="cat-chip change">Object Change</span>
+            </div>
+
+            <div class="method-header">
+                <span>Source</span>
+                <span>Janus-4o</span>
+                <span>Step1X-Edit</span>
+                <span class="ours-col">DIM-4.6B-Edit (Ours)</span>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/change/change_01_source.png"  alt=""/>
+                    <img src="assets/comparisons/change/change_01_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/change/change_01_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/change/change_01_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Change the person's shirt color to blue.</p>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/change/change_02_source.png"  alt=""/>
+                    <img src="assets/comparisons/change/change_02_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/change/change_02_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/change/change_02_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Change the animal's fur color to a solid shade of brown.</p>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/change/change_03_source.png"  alt=""/>
+                    <img src="assets/comparisons/change/change_03_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/change/change_03_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/change/change_03_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Change the background from the snow to a beach setting.</p>
+            </div>
+
+        </div>
+
+        <!-- ===== Object Removal ===== -->
+        <div class="cat-block">
+            <div class="cat-header">
+                <span class="cat-chip removal">Object Removal</span>
+            </div>
+
+            <div class="method-header">
+                <span>Source</span>
+                <span>Janus-4o</span>
+                <span>Step1X-Edit</span>
+                <span class="ours-col">DIM-4.6B-Edit (Ours)</span>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/remove/remove_01_source.png"  alt=""/>
+                    <img src="assets/comparisons/remove/remove_01_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/remove/remove_01_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/remove/remove_01_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Remove the child standing near the edge of the water.</p>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/remove/remove_02_source.png"  alt=""/>
+                    <img src="assets/comparisons/remove/remove_02_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/remove/remove_02_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/remove/remove_02_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Remove the sheep in the foreground.</p>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/remove/remove_03_source.png"  alt=""/>
+                    <img src="assets/comparisons/remove/remove_03_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/remove/remove_03_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/remove/remove_03_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Remove the seaplane on the shoreline.</p>
+            </div>
+
+        </div>
+
+        <!-- ===== Object Replacement ===== -->
+        <div class="cat-block">
+            <div class="cat-header">
+                <span class="cat-chip replacement">Object Replacement</span>
+            </div>
+
+            <div class="method-header">
+                <span>Source</span>
+                <span>Janus-4o</span>
+                <span>Step1X-Edit</span>
+                <span class="ours-col">DIM-4.6B-Edit (Ours)</span>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/replace/replace_01_source.png"  alt=""/>
+                    <img src="assets/comparisons/replace/replace_01_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/replace/replace_01_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/replace/replace_01_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Replace the deer in the image with a lion standing majestically in the same forest setting, under the glowing golden light and light snowflakes.</p>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/replace/replace_02_source.png"  alt=""/>
+                    <img src="assets/comparisons/replace/replace_02_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/replace/replace_02_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/replace/replace_02_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Replace the mountain goat in the image with a rabbit.</p>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/replace/replace_03_source.png"  alt=""/>
+                    <img src="assets/comparisons/replace/replace_03_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/replace/replace_03_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/replace/replace_03_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Replace the horse in the image with a cat.</p>
+            </div>
+
+        </div>
+
+        <!-- ===== Style Transfer ===== -->
+        <div class="cat-block">
+            <div class="cat-header">
+                <span class="cat-chip style">Style Transfer</span>
+            </div>
+
+            <div class="method-header">
+                <span>Source</span>
+                <span>Janus-4o</span>
+                <span>Step1X-Edit</span>
+                <span class="ours-col">DIM-4.6B-Edit (Ours)</span>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/style/style_01_source.png"  alt=""/>
+                    <img src="assets/comparisons/style/style_01_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/style/style_01_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/style/style_01_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Transfer the image into a colourful ceramic mosaic-tile style.</p>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/style/style_02_source.png"  alt=""/>
+                    <img src="assets/comparisons/style/style_02_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/style/style_02_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/style/style_02_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Transfer the image into a traditional ukiyo-e woodblock-print style.</p>
+            </div>
+
+            <div class="comp-row-4">
+                <div class="grid-4">
+                    <img src="assets/comparisons/style/style_03_source.png"  alt=""/>
+                    <img src="assets/comparisons/style/style_03_janus4o.png" alt=""/>
+                    <img src="assets/comparisons/style/style_03_step1x.png"  alt=""/>
+                    <img src="assets/comparisons/style/style_03_dim.png"     alt=""/>
+                </div>
+                <p class="comp-prompt">Transfer the image into a folded-paper origami art style.</p>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- ============ Quantitative Results ============ -->
+<section class="alt">
+    <h2 class="section-title">Quantitative Results</h2>
+
+    <!-- ImgEdit full -->
+    <p class="table-caption">ImgEdit Overall</p>
+    <div class="section-body" style="max-width: 1100px;">
+        <p style="text-align:center; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+            By default, GPT-4o serves as the external designer. All models are evaluated using GPT-4.1.
+        </p>
+    </div>
+    <table class="table results-table">
+        <thead>
+        <tr>
+            <th>Model</th>
+            <th>Add</th>
+            <th>Adj.</th>
+            <th>Ext.</th>
+            <th>Rep.</th>
+            <th>Rem.</th>
+            <th>Back.</th>
+            <th>Sty.</th>
+            <th>Hyb.</th>
+            <th>Act.</th>
+            <th>Overall</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr><td>MagicBrush</td>   <td>2.84</td><td>1.58</td><td>1.51</td><td>1.97</td><td>1.58</td><td>1.75</td><td>2.38</td><td>1.62</td><td>1.22</td><td>1.83</td></tr>
+        <tr><td>Instruct-P2P</td> <td>2.45</td><td>1.83</td><td>1.44</td><td>2.01</td><td>1.50</td><td>1.44</td><td>3.55</td><td>1.20</td><td>1.46</td><td>1.88</td></tr>
+        <tr><td>AnyEdit</td>      <td>3.18</td><td>2.95</td><td>1.88</td><td>2.47</td><td>2.23</td><td>2.24</td><td>2.85</td><td>1.56</td><td>2.65</td><td>2.45</td></tr>
+        <tr><td>UltraEdit</td>    <td>3.44</td><td>2.81</td><td>2.13</td><td>2.96</td><td>1.45</td><td>2.83</td><td>3.76</td><td>1.91</td><td>2.98</td><td>2.70</td></tr>
+        <tr><td>Step1X-Edit</td>  <td>3.88</td><td>3.14</td><td>1.76</td><td>3.40</td><td>2.41</td><td>3.16</td><td>4.63</td><td>2.64</td><td>2.52</td><td>3.06</td></tr>
+        <tr><td>BAGEL</td>        <td>3.56</td><td>3.31</td><td>1.70</td><td>3.30</td><td>2.62</td><td>3.24</td><td>4.49</td><td>2.38</td><td>4.17</td><td>3.20</td></tr>
+        <tr><td>UniWorld-V1</td>  <td>3.82</td><td>3.64</td><td>2.27</td><td>3.47</td><td>3.24</td><td>2.99</td><td>4.21</td><td>2.96</td><td>2.74</td><td>3.26</td></tr>
+        <tr><td>Janus-4o</td>     <td>3.35</td><td>3.35</td><td>2.25</td><td>3.01</td><td>2.18</td><td>3.32</td><td>4.71</td><td>2.49</td><td>4.04</td><td>3.19</td></tr>
+        <tr><td>GPT-4o-Image</td> <td>4.61</td><td>4.33</td><td>2.90</td><td>4.35</td><td>3.66</td><td>4.57</td><td>4.93</td><td>3.96</td><td>4.89</td><td>4.20</td></tr>
+        <tr class="ours-row"><td>DIM-4.6B-Edit (Ours)</td><td>4.09</td><td>3.47</td><td>2.30</td><td>4.00</td><td>3.43</td><td>3.87</td><td>4.92</td><td>2.85</td><td>4.08</td><td>3.67</td></tr>
+        </tbody>
+    </table>
+
+    <!-- Designer Ablation -->
+    <p class="table-caption" style="margin-top: 2.5rem;">ImgEdit Designer Ablation</p>
+    <div class="section-body" style="max-width: 1100px;">
+        <p style="text-align:center; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+            <sup>†</sup> The default setting. The first row uses no external designer.
+        </p>
+    </div>
+    <table class="table results-table">
+        <thead>
+        <tr>
+            <th>Designer</th>
+            <th>Add</th>
+            <th>Adj.</th>
+            <th>Ext.</th>
+            <th>Rep.</th>
+            <th>Rem.</th>
+            <th>Back.</th>
+            <th>Sty.</th>
+            <th>Hyb.</th>
+            <th>Act.</th>
+            <th>Overall</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr><td>–</td>                <td>3.53</td><td>3.23</td><td>2.01</td><td>3.49</td><td>1.47</td><td>3.42</td><td>4.79</td><td>2.35</td><td>3.64</td><td>3.10</td></tr>
+        <tr><td>Qwen2.5-VL-3B</td>    <td>3.80</td><td>3.24</td><td>2.03</td><td>3.89</td><td>3.21</td><td>3.52</td><td>4.92</td><td>2.71</td><td>4.05</td><td>3.49</td></tr>
+        <tr><td>Qwen2.5-VL-7B</td>    <td>3.95</td><td>3.35</td><td>2.25</td><td>3.85</td><td>3.31</td><td>3.57</td><td>4.88</td><td>2.81</td><td>4.02</td><td>3.55</td></tr>
+        <tr><td>MiMo-VL-7B</td>       <td>3.95</td><td>3.32</td><td>2.20</td><td>3.75</td><td>2.46</td><td>3.82</td><td>4.88</td><td>2.52</td><td>3.93</td><td>3.43</td></tr>
+        <tr><td>InternVL3.5-8B</td>   <td>3.98</td><td>3.40</td><td>2.05</td><td>4.14</td><td>3.30</td><td>3.84</td><td>4.94</td><td>2.77</td><td>3.89</td><td>3.59</td></tr>
+        <tr><td>GLM-4.1V-9B</td>      <td>3.95</td><td>3.27</td><td>2.23</td><td>3.90</td><td>2.64</td><td>3.81</td><td>4.92</td><td>2.23</td><td>4.02</td><td>3.44</td></tr>
+        <tr class="ours-row"><td>GPT-4o<sup>†</sup></td><td>4.09</td><td>3.47</td><td>2.30</td><td>4.00</td><td>3.43</td><td>3.87</td><td>4.92</td><td>2.85</td><td>4.08</td><td>3.67</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ============ BibTeX ============ -->
+<section>
+    <h2 class="section-title">BibTeX</h2>
+    <pre class="bibtex-box"><code>@misc{zeng2025draw,
+  title         = {Draw-In-Mind: Rebalancing Designer-Painter Roles in Unified Multimodal Models Benefits Image Editing},
+  author        = {Zeng, Ziyun and Zhang, David Junhao and Li, Wei and Shou, Mike Zheng},
+  year          = {2025},
+  eprint        = {2509.01986},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2509.01986}
+}</code></pre>
+</section>
+
+<!-- ============ Footer ============ -->
+<footer>
+    Source code: <a href="https://github.com/showlab/DIM">github.com/showlab/DIM</a>.
+</footer>
+
+</body>
+</html>
